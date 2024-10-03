@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
 using System.Text.RegularExpressions;
+using MySql.Data.MySqlClient;
 
 namespace Form_Datos
 {
@@ -121,11 +122,7 @@ namespace Form_Datos
                 MessageBox.Show("Por favor, ingrese un número de telefono valido.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 textBox.Clear();
             }
-            /*  if (!EsEnteroValido10Digitos(textBox.Text))
-               {
-                   MessageBox.Show("Por favor, ingrese un número de telefono valido.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                   //textBox.Clear();
-               }*/
+
         }
 
         private void validarNombre (object sender, EventArgs e)
