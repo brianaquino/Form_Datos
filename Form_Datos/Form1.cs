@@ -15,10 +15,12 @@ namespace Form_Datos
 {
     public partial class Form1 : Form
     {
+
+        string SqlConection = "Server=localhost; Port=3306;Database=practica_7;Uid=root;Pwd=root;";
         public Form1()
         {
-            InitializeComponent();
 
+            InitializeComponent();
 
             // agregar controladores de eventos TextChanged a los campos
             tbNombre.TextChanged += validarNombre;
@@ -57,10 +59,11 @@ namespace Form_Datos
             {
                 if (archivoExiste)
                 {
-                    writer.WriteLine();
+                    
                 }
 
                 writer.WriteLine(datos);
+                InsertarRegistro(nombres, apellidos, Int32.Parse(edad), decimal.Parse(estatura), telefono, genero);
             }
 
             MessageBox.Show("Datos guardados con exito:\n\n" + datos, "Informacion",
@@ -154,6 +157,34 @@ namespace Form_Datos
             tbEstatura.Clear();
             rbHombre.Checked = false;
             rbMujer.Checked = false;
+        }
+
+         
+        private void InsertarRegistro(string nombre, string apellidos,int edad, decimal estatura, string telefono, string genero)
+        {
+            using (MySqlConnection conection = new MySqlConnection(SqlConection))
+            {
+                conection.Open();
+
+                string insertQuery = "INSERT INTO registros (Nombre, Apellidos, Edad, Estatura, Telefono, Genero)" + "VALUES (@Nombre, @Apellidos, @Edad, @Estatura, @Telefono, @Genero) ";
+
+
+                using (MySqlCommand command = new MySqlCommand(insertQuery, conection))
+                {
+                    command.Parameters.AddWithValue("@Nombre", nombre);
+                    command.Parameters.AddWithValue("@Apellidos", apellidos);
+                    command.Parameters.AddWithValue("@Edad", edad);
+                    command.Parameters.AddWithValue("@Estatura", estatura);
+                    command.Parameters.AddWithValue("@Telefono", telefono);
+                    command.Parameters.AddWithValue("@Genero", genero);
+
+                    command.ExecuteNonQuery();
+
+
+
+                }
+                conection.Close();
+            }
         }
 
       
