@@ -8,14 +8,27 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
+using System.Text.RegularExpressions;
+using MySql.Data.MySqlClient;
 
 namespace Form_Datos
 {
     public partial class Form1 : Form
     {
+
+        string SqlConection = "Server=localhost; Port=3306;Database=practica_7;Uid=root;Pwd=root;";
         public Form1()
         {
+
             InitializeComponent();
+
+            // agregar controladores de eventos TextChanged a los campos
+            tbNombre.TextChanged += validarNombre;
+            tbApellidos.TextChanged += validarApellidos;
+            tbEdad.TextChanged += validarEdad;
+            tbEstatura.TextChanged += validarEstatura;
+            tbTelefono.Leave += validarTelefono;
+          
         }
 
         private void btnGuardar_Click(object sender, EventArgs e)
@@ -35,6 +48,7 @@ namespace Form_Datos
             {
                 genero = "Mujer";
             }
+               
 
             string datos = $"Nombres: {nombres}\r\nApellidos: {apellidos}\r\nEdad: {edad}\r\nEstatura: {estatura}\r\nTelefono: {telefono}\r\nGenero: {genero}";
 
@@ -45,21 +59,94 @@ namespace Form_Datos
             {
                 if (archivoExiste)
                 {
-                    writer.WriteLine();
+                    
                 }
 
                 writer.WriteLine(datos);
+                InsertarRegistro(nombres, apellidos, Int32.Parse(edad), decimal.Parse(estatura), telefono, genero);
             }
 
             MessageBox.Show("Datos guardados con exito:\n\n" + datos, "Informacion",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBoxButtons.OK, MessageBoxIcon.Information);  
+        }
+        private bool EsEnteroValido(string valor)
+        {
+            int resultado;
+            return int.TryParse(valor, out resultado);
 
-
-
-          
         }
 
-     
+        private bool EsDecimalValido(string valor)
+        {
+            decimal resultado;
+            return decimal.TryParse(valor, out resultado);
+        }
+
+        private bool EsEnteroValido10Digitos(string valor)
+        {
+            long resultado;
+            return long.TryParse(valor, out resultado)&&valor.Length == 10;
+        }
+
+        private bool EsTextoValido(string valor)
+        {
+            return Regex.IsMatch(valor, @"^[a-zA-Z\s]+$");
+        }
+
+        private void validarEdad(object sender, EventArgs e)
+        {
+            TextBox textBox = (TextBox)sender;
+            if (!EsEnteroValido(textBox.Text))
+            {
+                MessageBox.Show("Por favor, ingrese una edad valida.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                textBox.Clear();
+            }
+        }
+
+        private void validarEstatura(object sender, EventArgs e)
+        {
+            TextBox textBox = (TextBox)sender;
+            if (!EsDecimalValido(textBox.Text))
+            {
+                MessageBox.Show("Por favor, ingrese una Estatura valida.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                textBox.Clear();
+            }
+        }
+        private void validarTelefono (object sender, EventArgs e)
+        {
+            TextBox textBox = (TextBox)sender;
+            if (textBox.Text.Length == 10 && EsEnteroValido10Digitos(textBox.Text))
+            {
+                textBox.BackColor = Color.Blue;
+            }
+            else
+            {
+                textBox.BackColor = Color.Gray;
+                MessageBox.Show("Por favor, ingrese un número de telefono valido.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                textBox.Clear();
+            }
+
+        }
+
+        private void validarNombre (object sender, EventArgs e)
+        {
+            TextBox textBox = (TextBox)sender;
+            if (!EsTextoValido(textBox.Text))
+            {
+                MessageBox.Show("Por favor, ingrese una nombre valido.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                textBox.Clear();
+            }
+
+        }
+        private void validarApellidos(object sender, EventArgs e)
+        {
+            TextBox textBox = (TextBox)sender;
+            if (!EsTextoValido(textBox.Text))
+            {
+                MessageBox.Show("Por favor, ingrese una apellido valido.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                textBox.Clear();
+            } 
+        }
 
         private void btnLimpiar_Click_1(object sender, EventArgs e)
         {
@@ -70,6 +157,39 @@ namespace Form_Datos
             tbEstatura.Clear();
             rbHombre.Checked = false;
             rbMujer.Checked = false;
+        }
+
+         
+        private void InsertarRegistro(string nombre, string apellidos,int edad, decimal estatura, string telefono, string genero)
+        {
+            using (MySqlConnection conection = new MySqlConnection(SqlConection))
+            {
+                conection.Open();
+
+                string insertQuery = "INSERT INTO registros (Nombre, Apellidos, Edad, Estatura, Telefono, Genero)" + "VALUES (@Nombre, @Apellidos, @Edad, @Estatura, @Telefono, @Genero) ";
+
+
+                using (MySqlCommand command = new MySqlCommand(insertQuery, conection))
+                {
+                    command.Parameters.AddWithValue("@Nombre", nombre);
+                    command.Parameters.AddWithValue("@Apellidos", apellidos);
+                    command.Parameters.AddWithValue("@Edad", edad);
+                    command.Parameters.AddWithValue("@Estatura", estatura);
+                    command.Parameters.AddWithValue("@Telefono", telefono);
+                    command.Parameters.AddWithValue("@Genero", genero);
+
+                    command.ExecuteNonQuery();
+
+
+
+                }
+                conection.Close();
+            }
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }
